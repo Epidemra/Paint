@@ -21,7 +21,7 @@ namespace Paint
     public partial class MainWindow : Window
     {
 
-        List<UIElement> deletedFigures = new List<UIElement>();
+        Stack<UIElement> deletedFigures = new Stack<UIElement>();
         byte tag = 0;
         bool clicked = false;
         bool drawFirst = true;
@@ -71,7 +71,7 @@ namespace Paint
         {
             if (inkCanvas.Children.Count != 0)
             {
-                deletedFigures.Add(inkCanvas.Children[inkCanvas.Children.Count - 1]);
+                deletedFigures.Push(inkCanvas.Children[inkCanvas.Children.Count - 1]);
                 inkCanvas.Children.RemoveAt(inkCanvas.Children.Count - 1);
             }
         }
@@ -80,8 +80,7 @@ namespace Paint
         {
             if (deletedFigures.Count != 0)
             {
-                inkCanvas.Children.Add(deletedFigures[deletedFigures.Count - 1]);
-                deletedFigures.RemoveAt(deletedFigures.Count - 1);
+                inkCanvas.Children.Add(deletedFigures.Pop());
             }
         }
 

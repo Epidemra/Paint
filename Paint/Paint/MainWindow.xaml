@@ -36,10 +36,10 @@
         <Canvas Name ="inkCanvas" Grid.Column="2" Background="LightCyan" Margin="0.2,0,0.4,-0.2" MouseDown="Canvas_MouseDown" MouseUp="Canvas_MouseUp" MouseMove="Canvas_MouseMove"/>
         <Button x:Name="Ellipse" Margin="12,216,205.6,84.8"  Content="Ellipse" Height="20" Width="40" Uid="1" Click="GetFigureType"/>
         <Button x:Name="Circle" Margin="12,248,205.6,52.8"  Content="Circle" Height="20" Width="40" Uid="2" Click="GetFigureType"/>
-        <Button x:Name="Square" Margin="72,182,145.6,118.8"  Content="Square" Height="20" Width="40" Uid="3"  RenderTransformOrigin="-2.265,-3.03"/>
-        <Button x:Name="Rectangle" Margin="12,282,185.6,18.8"  Content="Rectangle" Height="20" Width="60" Uid="4" />
+        <Button x:Name="Square" Margin="72,182,145.6,118.8"  Content="Square" Height="20" Width="40" Uid="3"  RenderTransformOrigin="-2.265,-3.03" Click="GetFigureType"/>
+        <Button x:Name="Rectangle" Margin="12,282,185.6,18.8"  Content="Rectangle" Height="20" Width="60" Uid="4" Click="GetFigureType"/>
         <Button x:Name="Undo" Margin="208,248,9.6,52.8"  Content="Undo" Height="20" Width="40" Click="undo"/>
         <Button x:Name="Redo" Margin="208,282,9.6,18.8"  Content="Redo" Height="20" Width="40" Click="redo"/>
-        <Button x:Name="Triangle" Margin="72,216,123.6,84.8"  Content="Triangle" Height="20" Uid="5"  RenderTransformOrigin="-2.265,-3.03"/>
+        <Button x:Name="Triangle" Margin="72,216,123.6,84.8"  Content="Triangle" Height="20" Uid="5" Click="GetFigureType"/>
     </Grid>
 </Window>
