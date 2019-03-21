@@ -21,6 +21,9 @@ namespace Paint
             figureList.Add(0, new Line());
             figureList.Add(1, new Ellipse());
             figureList.Add(2, new Circle());
+            figureList.Add(3, new Square());
+            figureList.Add(4, new Rectangle());
+            figureList.Add(5, new equalSideTriangle());
         }
     }
 }
