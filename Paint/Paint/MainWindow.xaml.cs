@@ -24,6 +24,7 @@ namespace Paint
         Stack<UIElement> deletedFigures = new Stack<UIElement>();
         byte tag = 0;
         bool clicked = false;
+        bool isCanceled = false;
         bool drawFirst = true;
         Point a, b;
         Button currentFigure = null;
@@ -73,12 +74,13 @@ namespace Paint
             {
                 deletedFigures.Push(inkCanvas.Children[inkCanvas.Children.Count - 1]);
                 inkCanvas.Children.RemoveAt(inkCanvas.Children.Count - 1);
+                isCanceled = true;
             }
         }
 
         private void redo(object sender, RoutedEventArgs e)
         {
-            if (deletedFigures.Count != 0)
+            if (deletedFigures.Count != 0 && isCanceled)
             {
                 inkCanvas.Children.Add(deletedFigures.Pop());
             }
@@ -113,6 +115,8 @@ namespace Paint
                 drawFirst = false;
                 switchHighlighter.Content = tag.ToString();
                 shapes.figureList[tag].Draw(inkCanvas);
+                isCanceled = false;
+                deletedFigures.Clear();
             }
         }
 
