@@ -20,7 +20,7 @@ namespace Paint
             height = (int)Math.Sqrt(Math.Pow(Math.Abs(firstPoint.X - secondPoint.X), 2) + Math.Pow(Math.Abs(firstPoint.Y - secondPoint.Y), 2));
             width = height;
 
-            DrawEllipse(height, width, canvas);
+            base.DrawEllipse(height, width, canvas);
         }
     }
 }
