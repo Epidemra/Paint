@@ -390,8 +390,7 @@ namespace Paint
             SaveFileDialog saveFileDialog = new SaveFileDialog();
             saveFileDialog.Filter = "(*.dat)|*.dat";
             if(saveFileDialog.ShowDialog() == true)
-            {
-                
+            {                
                 using (var fs = new FileStream(saveFileDialog.FileName, FileMode.Create))
                 {
                     BinaryWriter binaryWriter = new BinaryWriter(fs);
@@ -400,14 +399,14 @@ namespace Paint
                     {
                         formatter.Serialize(fs, fig);
                         binaryWriter.Write((byte)'$');
-                    }                        
+                    }
+                    binaryWriter.Close();
                 }
             }         
         }
 
         private void Open_Click(object sender, RoutedEventArgs e)
-        {
-            
+        {            
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "(*.dat)|*.dat";
             if (openFileDialog.ShowDialog() == true)
@@ -420,8 +419,8 @@ namespace Paint
                     deletedFigures.Clear();
                     BinaryReader vd = new BinaryReader(fs);
                     var formatter = new BinaryFormatter();
-                    while (fs.Position != fs.Length)
-                    {
+                    while (fs.Position < fs.Length)
+                    {                        
                         try
                         {
                             Figure figure = (Figure)formatter.Deserialize(fs);
@@ -430,14 +429,19 @@ namespace Paint
                             inkCanvas.Children[inkCanvas.Children.Count - 1].MouseDown += MainWindow_MouseDown;
                             inkCanvas.Children[inkCanvas.Children.Count - 1].MouseUp += MainWindow_MouseUp;
                             ((System.Windows.Shapes.Shape)inkCanvas.Children[inkCanvas.Children.Count - 1]).Cursor = Cursors.Cross;
-                            if (fs.Position != fs.Length) vd.ReadByte();                      
+                            if (fs.Position < fs.Length)
+                                vd.ReadByte();
                         }
-                        catch(Exception exc)
+                        catch(Exception)
                         {
-                            MessageBox.Show("Oh, so sorry. There is an error", fs.Position.ToString(), MessageBoxButton.OK, MessageBoxImage.Error);
-                            while (fs.Position != fs.Length && vd.ReadByte() != (byte)'$') { }
+                            if(fs.Length - fs.Position > 350)
+                                while (fs.Position < fs.Length && vd.ReadByte() != (byte)'$') { fs.Position -= 2; }
+                            else
+                                while (fs.Position < fs.Length && vd.ReadByte() != (byte)'$') { }
                         }
                     }
+                    vd.Close();
+                    MessageBox.Show(printedFigures.Count.ToString(), "", MessageBoxButton.OK, MessageBoxImage.Error);
                     /*foreach (Figure fig in printedFigures)
                         formatter.Serialize(fs, fig);*/
                 }
