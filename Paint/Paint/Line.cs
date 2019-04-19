@@ -7,8 +7,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
+
 namespace Paint
 {
+    [Serializable]
     class Line : Figure
     {
         public Line(Point _firstPoint, Point _secondPoint, int _thickness) : base(_firstPoint, _secondPoint, _thickness)
@@ -18,15 +20,19 @@ namespace Paint
 
         public override void Draw(Canvas canvas)
         {
-            canvas.Children.Add(new System.Windows.Shapes.Line()
-            {
-                X1 = firstPoint.X,
-                Y1 = firstPoint.Y,
-                X2 = secondPoint.X,
-                Y2 = secondPoint.Y,
-                Stroke = Brushes.Black,
-                StrokeThickness = thickness
-            });
+            System.Windows.Shapes.Line line = new System.Windows.Shapes.Line();
+            line.X1 = firstPoint.X;
+            line.Y1 = firstPoint.Y;
+            line.X2 = secondPoint.X;
+            line.Y2 = secondPoint.Y;
+            line.Stroke = Brushes.Black;
+            line.StrokeThickness = thickness;
+            hash = line.GetHashCode();
+            canvas.Children.Add(line);
+
+            height = (int)Math.Abs(firstPoint.Y - secondPoint.Y);
+            width = (int)Math.Abs(firstPoint.X - secondPoint.X);
+
         }
     }
 }
