@@ -15,6 +15,7 @@ using System.Windows.Shapes;
 using Microsoft.Win32;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Reflection;
 
 namespace Paint
 {
@@ -23,11 +24,13 @@ namespace Paint
     /// </summary>
     /// 
     enum  dest { UpRight, UpLeft, DownLeft, DownRight};
-    enum resize { firstX, secondX, firstY, secondY};
+    public enum resize { firstX, secondX, firstY, secondY};
 
 
     public partial class MainWindow : Window
     {
+        Dictionary<string, MethodInfo> methods = new Dictionary<string, MethodInfo>();
+        Dictionary<string, Type> types = new Dictionary<string, Type>();
         Stack<UIElement> deletedFigures = new Stack<UIElement>();
         byte tag = 0;
         bool isDrawing = false;
@@ -40,7 +43,7 @@ namespace Paint
         bool drawFirst = true;
         Point a, b, startResize;
         Button currentFigure = null;
-        FigureList shapes = new FigureList();
+        //FigureList shapes = new FigureList();
         int thickness = 1;
         List<Figure> printedFigures = new List<Figure>();
         Stack<Figure> removedFigures = new Stack<Figure>();
@@ -49,10 +52,12 @@ namespace Paint
         UIElement chosenFigUI = null;
         Figure chosenFig = null;
         Figure current;
-        Creator[] creators = new Creator[] {LineCreator.getInstance(), EllipseCreator.getInstance(), CircleCreator.getInstance(),
-                                            SquareCreator.getInstance(), RectangleCreator.getInstance(), equalSideTriangleCreator.getInstance()};
+        Creator[] creators = new Creator[] { EllipseCreator.getInstance(), CircleCreator.getInstance(),
+                                            equalSideTriangleCreator.getInstance()};
+        MethodInfo select;
         public static System.Windows.Shapes.Rectangle frame = null;
         dynamic fig = null;
+        string currentType = null;
 
         public MainWindow()
         {
@@ -63,12 +68,60 @@ namespace Paint
             currentFigure.Background = Brushes.DarkCyan;
 
             inkCanvas.Background = Brushes.White;
+            int i = 0;
+
+            foreach (string file in Directory.EnumerateFiles("..\\Debug", "*.dll"))
+            {
+                MessageBox.Show(file);
+                Assembly asm = Assembly.LoadFrom(file);
+                Type type = asm.GetTypes()[0];
+                var fig = (Figure)Activator.CreateInstance(type);
+                if (!(fig is Figure))
+                    continue;
+                types.Add(type.ToString(), type);
+                var cmbItem = new ComboBoxItem();
+                cmbItem.Content = fig.GetType();//.Split('.')[1];
+                if (i == 0)
+                {
+                    currentType = type.ToString();
+                    cmbItem.IsSelected = true;
+                    i++;
+                }
+                shapeList.Items.Add(cmbItem);
+
+                foreach (MethodInfo meth in type.GetMethods())
+                {
+                    methods.Add(type.ToString() + '-' + meth.Name, meth);
+                }
+                    
+                
+/*
+                select = type.GetMethod("Draw");
+                select.Invoke(rect, new Object[] { inkCanvas });
+                printedFigures.Add(rect);*/
+
+                /*var lin = new Line();
+                type = lin.GetType();
+                var line = (Figure)Activator.CreateInstance(type);
+                select = type.GetMethod("Draw");
+                select.Invoke(line, new Object[] { inkCanvas });
+                printedFigures.Add(line);*/
+
+                /*
+                select = type.GetMethod("Select");
 
 
-            /*frame.Stroke = Brushes.Blue;
-            frame.Cursor = Cursors.SizeAll;
-            frame.MouseDown += Frame_MouseDown;
-            frame.MouseUp += Frame_MouseUp;*/
+                inkCanvas.Children[inkCanvas.Children.Count - 1].MouseDown += MainWindow_MouseDown;
+                inkCanvas.Children[inkCanvas.Children.Count - 1].MouseUp += MainWindow_MouseUp;
+                ((System.Windows.Shapes.Shape)inkCanvas.Children[inkCanvas.Children.Count - 1]).Cursor = Cursors.Cross;*/
+
+
+
+                /*frame.Stroke = Brushes.Blue;
+                frame.Cursor = Cursors.SizeAll;
+                frame.MouseDown += Frame_MouseDown;
+                frame.MouseUp += Frame_MouseUp;*/
+            }
         }
 
         private void MainWindow_KeyDown(object sender, KeyEventArgs e)
@@ -144,7 +197,7 @@ namespace Paint
             }
         }
 
-        private void ChangingObjects()
+        /*private void ChangingObjects()
         {
             shapes.upDate();
             foreach (Figure fig in shapes.figureList.Values)
@@ -153,7 +206,7 @@ namespace Paint
                 fig.secondPoint = b;
                 fig.thickness = thickness;
             }
-        }
+        }*/
 
         private void Canvas_MouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -162,8 +215,10 @@ namespace Paint
             a = e.GetPosition(inkCanvas);
             //var canv = (Canvas)sender;
             //
-            current = creators[tag].Create();
-            //        
+            //current = creators[tag].Create();
+            //
+            //MessageBox.Show(currentType);
+            current = (Figure)Activator.CreateInstance(types[currentType]);
         }
 
         private void MainWindow_MouseDown(object sender, MouseButtonEventArgs e)
@@ -193,7 +248,10 @@ namespace Paint
                 inkCanvas.Children.Add(chosenFigUI);
                 printedFigures.Remove(chosenFig);
                 printedFigures.Add(chosenFig);
-                fig.Select(inkCanvas);
+
+                methods[currentType + '-' + "Select"].Invoke(fig, new Object[] { inkCanvas });
+                //select.Invoke(fig, new Object[] { inkCanvas});
+                //fig.Select(inkCanvas);
                 frame.Stroke = Brushes.Blue;
                 frame.Cursor = Cursors.SizeAll;
                 frame.MouseDown += Frame_MouseDown;
@@ -269,6 +327,13 @@ namespace Paint
             //inkCanvas.Children.Remove(chosenFigUI);
         }
 
+        private void shapeList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ComboBox comboBox = (ComboBox)sender;
+            ComboBoxItem selectedItem = (ComboBoxItem)comboBox.SelectedItem;
+            currentType = selectedItem.Content.ToString();
+        }
+
         private void Canvas_MouseMove(object sender, MouseEventArgs e)
         {
             if (isResizing && (e.LeftButton == MouseButtonState.Pressed))
@@ -283,32 +348,38 @@ namespace Paint
                 b = e.GetPosition(inkCanvas);
                 if (isFirstHoriz)
                 {
-                    fig.Resize(e.GetPosition(inkCanvas).X - startResize.X, resize.firstX);
-                }                    
+                    methods[currentType + '-' + "Resize"].Invoke(fig, new Object[] { e.GetPosition(inkCanvas).X - startResize.X, resize.firstX });
+                    //fig.Resize(e.GetPosition(inkCanvas).X - startResize.X, resize.firstX);
+                }
                 else
                 if (isSecondHoriz)
                 {
-                    fig.Resize(e.GetPosition(inkCanvas).X - startResize.X, resize.secondX);
-                }                    
+                    //fig.Resize(e.GetPosition(inkCanvas).X - startResize.X, resize.secondX);
+                    methods[currentType + '-' + "Resize"].Invoke(fig, new Object[] { e.GetPosition(inkCanvas).X - startResize.X, resize.secondX });
+                }
                 else
                 if (isFirstVert)
                 {
-                    fig.Resize(e.GetPosition(inkCanvas).Y - startResize.Y, resize.firstY);
+                    //fig.Resize(e.GetPosition(inkCanvas).Y - startResize.Y, resize.firstY);
+                    methods[currentType + '-' + "Resize"].Invoke(fig, new Object[] { e.GetPosition(inkCanvas).Y - startResize.Y, resize.firstY });
                 }                    
                 else
                 if (isSecondVert)
                 {
-                    fig.Resize(e.GetPosition(inkCanvas).Y - startResize.Y, resize.secondY);
-                }                   
+                    //fig.Resize(e.GetPosition(inkCanvas).Y - startResize.Y, resize.secondY);
+                    methods[currentType + '-' + "Resize"].Invoke(fig, new Object[] { e.GetPosition(inkCanvas).Y - startResize.Y, resize.secondY });
+                }
 
-                fig.Draw(inkCanvas);
+                methods[currentType + '-' + "Draw"].Invoke(fig, new Object[] { inkCanvas});
+                //fig.Draw(inkCanvas);
                 inkCanvas.Children[inkCanvas.Children.Count - 1].MouseDown += MainWindow_MouseDown;
                 inkCanvas.Children[inkCanvas.Children.Count - 1].MouseUp += MainWindow_MouseUp;
                 ((System.Windows.Shapes.Shape)inkCanvas.Children[inkCanvas.Children.Count - 1]).Cursor = Cursors.Cross;
                 chosenFigUI = inkCanvas.Children[inkCanvas.Children.Count - 1];
                 inkCanvas.Children.Remove(frame);
                 // DrawFrame(chosenFig);
-                fig.Select(inkCanvas);
+                methods[currentType + '-' + "Select"].Invoke(fig, new Object[] { inkCanvas});
+                //fig.Select(inkCanvas);
                 frame.Stroke = Brushes.Blue;
                 frame.Cursor = Cursors.SizeAll;
                 frame.MouseDown += Frame_MouseDown;
@@ -327,9 +398,11 @@ namespace Paint
                 moveFirst = false;
                 ///switchHighlighter.Content = isCanceled.ToString();
                 b = e.GetPosition(inkCanvas);
-                fig.Move(inkCanvas, b.X - a.X, b.Y - a.Y, x, y);
-                
-                chosenFig.Draw(inkCanvas);
+                methods[currentType + '-' + "Move"].Invoke(fig, new Object[] { inkCanvas, b.X - a.X, b.Y - a.Y, x, y });
+                //fig.Move(inkCanvas, b.X - a.X, b.Y - a.Y, x, y);
+
+                //chosenFig.Draw(inkCanvas);
+                methods[currentType + '-' + "Draw"].Invoke(chosenFig, new Object[] { inkCanvas });
                 chosenFigUI = inkCanvas.Children[inkCanvas.Children.Count - 1];
                 switchHighlighter.Content = chosenFig.GetType();
                 inkCanvas.Children[inkCanvas.Children.Count - 1].MouseDown += MainWindow_MouseDown;
@@ -337,7 +410,8 @@ namespace Paint
                 ((System.Windows.Shapes.Shape)inkCanvas.Children[inkCanvas.Children.Count - 1]).Cursor = Cursors.Cross;
                 inkCanvas.Children.Remove(frame);
                 //DrawFrame(chosenFig);
-                fig.Select(inkCanvas);
+                //fig.Select(inkCanvas);
+                methods[currentType + '-' + "Select"].Invoke(fig, new Object[] { inkCanvas });
                 frame.Stroke = Brushes.Blue;
                 frame.Cursor = Cursors.SizeAll;
                 frame.MouseDown += Frame_MouseDown;
@@ -349,10 +423,11 @@ namespace Paint
             if (isDrawing && (e.LeftButton == MouseButtonState.Pressed) && !isResizing && !isMoving)
             {
                 b = e.GetPosition(inkCanvas);
-                current = creators[tag].Create();
+                /*current = creators[tag].Create();
                 current.firstPoint = a;
                 current.secondPoint = b;
-                current.thickness = thickness;
+                current.thickness = thickness;*/
+                current = (Figure)Activator.CreateInstance(types[currentType], new Object[] { a, b, thickness});
                // ChangingObjects();
                 if (!drawFirst)
                 {
@@ -364,7 +439,8 @@ namespace Paint
                 //printedFigures.Add(shapes.figureList[tag]);
                 //shapes.figureList[tag].Draw(inkCanvas);
                 printedFigures.Add(current);
-                current.Draw(inkCanvas);
+                methods[currentType + '-' + "Draw"].Invoke(current, new Object[] { inkCanvas });
+                //current.Draw(inkCanvas);
                 inkCanvas.Children[inkCanvas.Children.Count - 1].MouseDown += MainWindow_MouseDown;
                 inkCanvas.Children[inkCanvas.Children.Count - 1].MouseUp += MainWindow_MouseUp;
                 ((System.Windows.Shapes.Shape)inkCanvas.Children[inkCanvas.Children.Count - 1]).Cursor = Cursors.Cross;
@@ -395,7 +471,7 @@ namespace Paint
                 {
                     BinaryWriter binaryWriter = new BinaryWriter(fs);
                     var formatter = new BinaryFormatter();
-                    foreach(Figure fig in printedFigures)
+                    foreach (Figure fig in printedFigures)
                     {
                         formatter.Serialize(fs, fig);
                         binaryWriter.Write((byte)'$');
@@ -419,23 +495,28 @@ namespace Paint
                     deletedFigures.Clear();
                     BinaryReader vd = new BinaryReader(fs);
                     var formatter = new BinaryFormatter();
+                    long lastPos = 0;
                     while (fs.Position < fs.Length)
                     {                        
                         try
                         {
-                            Figure figure = (Figure)formatter.Deserialize(fs);
-                            figure.Draw(inkCanvas);
+                            var figure = (Figure)formatter.Deserialize(fs);
+                            if (types.Values.ToList().IndexOf(figure.GetType()) != -1)
+                                methods[figure.GetType().ToString() + '-' + "Draw"].Invoke(figure, new Object[] { inkCanvas });
+                            //select.Invoke(figure, new Object[] { inkCanvas});
+                            //figure.Draw(inkCanvas);
                             printedFigures.Add(figure);
                             inkCanvas.Children[inkCanvas.Children.Count - 1].MouseDown += MainWindow_MouseDown;
                             inkCanvas.Children[inkCanvas.Children.Count - 1].MouseUp += MainWindow_MouseUp;
                             ((System.Windows.Shapes.Shape)inkCanvas.Children[inkCanvas.Children.Count - 1]).Cursor = Cursors.Cross;
                             if (fs.Position < fs.Length)
                                 vd.ReadByte();
+                            lastPos = fs.Position;
                         }
                         catch(Exception)
                         {
-                            if(fs.Length - fs.Position > 350)
-                                while (fs.Position < fs.Length && vd.ReadByte() != (byte)'$') { fs.Position -= 2; }
+                            if (fs.Position - lastPos > 425)
+                                while (fs.Position >= 0 && vd.ReadByte() != (byte)'$') { fs.Position -= 2; }
                             else
                                 while (fs.Position < fs.Length && vd.ReadByte() != (byte)'$') { }
                         }
