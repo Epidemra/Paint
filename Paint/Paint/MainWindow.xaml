@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Paint"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
-    <Grid>
+    <Grid Name="ButtonPanel">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
@@ -14,7 +14,7 @@
         </Grid.ColumnDefinitions>
         <Slider Value="1" Minimum="1" Maximum="20" SelectionStart="1" Height="30" 
         IsSelectionRangeEnabled="True" Margin="-2,147,1.6,143.8" ValueChanged="Slider_ValueChanged"/>
-        <Button Name="Line" Margin="12,182,215.6,118.8"  Content="Line" Height="20" Width="30" Uid="0" Click="GetFigureType"/>
+        <ComboBox Name="shapeList" Height="30" Margin="-2,182,1.6,108.8" SelectionChanged="shapeList_SelectionChanged"/>
         <Grid  Grid.Column="0" Height="95" Width="113" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="72,42,72.6,183.8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition></ColumnDefinition>
@@ -30,16 +30,13 @@
             </Grid.RowDefinitions>
             <Button Name ="switchHighlighter" Grid.Row="0" Content="Use Highlighter" Grid.ColumnSpan="3" Margin="0,0,-0.2,0.2"/>
             <Button Name="Clean" Grid.Row="4" Grid.ColumnSpan="3" Content="Очистить" Click="Clean_Click" Height="19" Margin="0,0,-0.2,0" VerticalAlignment="Top"/>
+            <Button x:Name="Save" Margin="7.4,18.8,0.2,18"  Content="Save" Height="20" Width="30" Uid="0" Click="Save_Click" Grid.Column="1" Grid.Row="1" Grid.RowSpan="3"/>
+            <Button x:Name="Open" Margin="0,18.8,35.2,18.267"  Content="Open" Height="20" Uid="0" Click="Open_Click" Grid.ColumnSpan="2" Grid.Row="1" Grid.RowSpan="3"/>
         </Grid>
         <GridSplitter Grid.Column="1" ShowsPreview="False" Width="3"
         HorizontalAlignment="Center" VerticalAlignment="Stretch" />
         <Canvas Name ="inkCanvas" Grid.Column="2" Background="LightCyan" Margin="0.2,0,0.4,-0.2" MouseDown="Canvas_MouseDown" MouseUp="Canvas_MouseUp" MouseMove="Canvas_MouseMove"/>
-        <Button x:Name="Ellipse" Margin="12,216,205.6,84.8"  Content="Ellipse" Height="20" Width="40" Uid="1" Click="GetFigureType"/>
-        <Button x:Name="Circle" Margin="12,248,205.6,52.8"  Content="Circle" Height="20" Width="40" Uid="2" Click="GetFigureType"/>
-        <Button x:Name="Square" Margin="72,182,145.6,118.8"  Content="Square" Height="20" Width="40" Uid="3"  RenderTransformOrigin="-2.265,-3.03" Click="GetFigureType"/>
-        <Button x:Name="Rectangle" Margin="12,282,185.6,18.8"  Content="Rectangle" Height="20" Width="60" Uid="4" Click="GetFigureType"/>
-        <Button x:Name="Undo" Margin="208,248,9.6,52.8"  Content="Undo" Height="20" Width="40" Click="undo"/>
-        <Button x:Name="Redo" Margin="208,282,9.6,18.8"  Content="Redo" Height="20" Width="40" Click="redo"/>
-        <Button x:Name="Triangle" Margin="72,216,123.6,84.8"  Content="Triangle" Height="20" Uid="5" Click="GetFigureType"/>
+        <Button x:Name="Undo" Margin="208,42,9.6,258.8"  Content="Undo" Height="20" Width="40" Click="undo"/>
+        <Button x:Name="Redo" Margin="211,85,6.6,215.8"  Content="Redo" Height="20" Width="40" Click="redo"/>
     </Grid>
 </Window>
