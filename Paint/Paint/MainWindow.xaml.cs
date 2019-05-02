@@ -32,13 +32,13 @@ namespace Paint
     /// Логика взаимодействия для MainWindow.xaml
     /// </summary>
     /// 
-    enum  dest { UpRight, UpLeft, DownLeft, DownRight};
+    //enum  dest { UpRight, UpLeft, DownLeft, DownRight};
     //public enum resize { firstX, secondX, firstY, secondY};
 
 
     public partial class MainWindow : Window
     {
-        Dictionary<string, MethodInfo> methods = new Dictionary<string, MethodInfo>();
+        //Dictionary<string, MethodInfo> methods = new Dictionary<string, MethodInfo>();
         Dictionary<string, Type> types = new Dictionary<string, Type>();
         Dictionary<string, ICreator> creators = new Dictionary<string, ICreator>();
         Stack<UIElement> deletedFigures = new Stack<UIElement>();
@@ -531,9 +531,13 @@ namespace Paint
                     deletedFigures.Clear();
                     BinaryReader vd = new BinaryReader(fs);
                     var formatter = new BinaryFormatter();
-                    long lastPos = 0;
+                    //long lastPos = 0;
                     while (fs.Position < fs.Length)
-                    {                        
+                    {
+                        long backUp = fs.Position;
+                        while (fs.Position < fs.Length && vd.ReadByte() != (byte)'$') { }
+                        long delimPos = fs.Position;
+                        fs.Position = backUp;
                         try
                         {
                             var figure = (IFigure)formatter.Deserialize(fs);
@@ -547,24 +551,33 @@ namespace Paint
                                 inkCanvas.Children[inkCanvas.Children.Count - 1].MouseDown += MainWindow_MouseDown;
                                 inkCanvas.Children[inkCanvas.Children.Count - 1].MouseUp += MainWindow_MouseUp;
                                 ((System.Windows.Shapes.Shape)inkCanvas.Children[inkCanvas.Children.Count - 1]).Cursor = Cursors.Cross;
-                            }                                
+                            }
                             if (fs.Position < fs.Length)
                                 vd.ReadByte();
-                            lastPos = fs.Position;
+                            //lastPos = fs.Position;
                         }
-                        catch(Exception)
+                        catch (Exception)
                         {
-                            if (fs.Position - lastPos > 425)
+                            /*if (fs.Position - lastPos > 425)
+                               while (fs.Position >= 0 && vd.ReadByte() != (byte)'$') { fs.Position -= 2; }
+                           else
+                               while (fs.Position < fs.Length && vd.ReadByte() != (byte)'$') { }*/
+                            fs.Position = delimPos;
+                            /*if (fs.Position > delimPos)
+                            {
+                                //fs.Position--;
                                 while (fs.Position >= 0 && vd.ReadByte() != (byte)'$') { fs.Position -= 2; }
+                            }                                
                             else
-                                while (fs.Position < fs.Length && vd.ReadByte() != (byte)'$') { }
+                                if (fs.Position < delimPos)
+                                    while (fs.Position < fs.Length && vd.ReadByte() != (byte)'$') { }*/
                         }
                     }
                     vd.Close();
                     MessageBox.Show(printedFigures.Count.ToString(), "", MessageBoxButton.OK, MessageBoxImage.Error);
                     /*foreach (Figure fig in printedFigures)
                         formatter.Serialize(fs, fig);*/
-                }
+                }                
             }
         }
 
